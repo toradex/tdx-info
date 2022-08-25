@@ -1,8 +1,6 @@
 #!/bin/sh
 
 ## Script to get useful info about Toradex hardware.
-# Date: may-02-2022
-# Authors: hiagofranco, g-claudino and leograba.
 
 #### Variables ####
 
