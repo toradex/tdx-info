@@ -168,9 +168,21 @@ modules_info ()
 
 dmesg_log ()
 {
-    loggeduser=${SUDO_USER:-$(logname)}
-    dmesg > /home/"$loggeduser"/dmesg.txt
-    chown "$loggeduser":"$loggeduser" /home/"$loggeduser"/dmesg.txt
+    loggeduser=${SUDO_USER:-$(whoami)}
+    dmesg_logfile="/home/${loggeduser}/dmesg.txt"
+    dmesg > ${dmesg_logfile}
+    chown "$loggeduser":"$loggeduser" ${dmesg_logfile}
+
+    info="$(cat ${dmesg_logfile} | head \
+        && echo "" \
+        && echo "..." \
+        && echo "" \
+        && cat ${dmesg_logfile} | tail)"
+
+    print_header "Log from dmesg"
+    print_info "Content truncated" "$info"
+    echo "Log from dmesg saved to /home/${loggeduser}/dmesg.txt"
+    print_footer
 }
 
 check_root_user ()
