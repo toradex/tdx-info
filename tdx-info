@@ -181,7 +181,7 @@ dmesg_log ()
 
     print_header "Log from dmesg"
     print_info "Content truncated" "$info"
-    echo "Log from dmesg saved to /home/${loggeduser}/dmesg.txt"
+    echo "Log from dmesg saved to ${dmesg_logfile}"
     print_footer
 }
 
