@@ -6,6 +6,7 @@ The goal of this script is to run it once and get useful information about hardw
 
 ## Usage ##
 
+If you are using BSP or TorizonCore with version 6 or later, simply run:
 Usage: ./tdx-info [OPTION]
 
 * If no parameter was passed, this script will display hardware and software information by default.
@@ -18,3 +19,7 @@ Usage: ./tdx-info [OPTION]
 * --no-devices, -nd  : Display hardware and software information without listing devices.
 * --software, -s     : Display only software information.
 * --all, -a          : Display all information shown above without the dmesg log.
+
+
+For older versions of BSP or TorizonCore, run the following command to print the information:
+wget https://raw.githubusercontent.com/toradex/tdx-info/master/tdx-info --output-document=tdx-info && sudo sh ./tdx-info
