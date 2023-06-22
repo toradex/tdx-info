@@ -210,7 +210,8 @@ devicetree_detect ()
     # GRUB seem to have some sort of support for device tree
     if  find /boot/ -name "*dtb" 2> /dev/null | grep -q . || \
         find /var/rootdirs/mnt/boot/ -name "*dtb" 2> /dev/null | grep -q . || \
-        find /dev/ -iname "*ubi*" 2> /dev/null | grep -q .; then
+        find /dev/ -iname "*ubi*" 2> /dev/null | grep -q . || \
+        find /proc/device-tree/ -name "model" 2> /dev/null | grep -q .; then
         export USE_DEVICETREE=1
     else
         export USE_DEVICETREE=""
