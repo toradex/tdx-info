@@ -52,6 +52,7 @@ software_summary ()
     if [ -f /etc/os-release ]; then
         distro_name=$(grep ^NAME /etc/os-release)
         distro_version=$(grep VERSION_ID /etc/os-release)
+        distro_variant=$(grep VARIANT /etc/os-release)
     else
         distro_name=$(cat /etc/issue)
         distro_version=""
@@ -64,6 +65,7 @@ software_summary ()
     print_info "Kernel command line" "$kernel_cmdline"
     print_info "Distro name" "$distro_name"
     print_info "Distro version" "$distro_version"
+    print_info "Distro variant" "$distro_variant"
     print_info "Hostname" "$hostname"
     print_footer
 }
