@@ -9,21 +9,35 @@ TABULATION_WIDTH=25
 
 #### Functions ####
 
+slugify ()
+{
+    echo "$1" | sed -r s/[^a-zA-Z0-9]+/-/g | sed -r s/^-+\|-+$//g | tr A-Z a-z
+}
+
 print_header ()
 {
+    if [ -z "$1" ] ; then
+        echo 'Error: "print_info" is missing parameter(s)!'
+        exit 1
+    fi
+    if [ ! -z "$JSON_OUTPUT" ] ; then
+        echo "  \"$(slugify $1)\": {"
+        return
+    fi
     if [ -n "$1" ]; then
         echo ""
         echo "$1"
         printf "%0.s-" $(seq 1 $HORIZONTAL_LINE_WIDTH)
         printf "\n"
-    else
-        echo 'Error: "print_header" called without a parameter!'
-        exit 1
     fi
 }
 
 print_info ()
 {
+    if [ ! -z "$JSON_OUTPUT" ] ; then
+        print_info_json "$1" "$2"
+        return
+    fi
     if [ -z "$1" ] ; then
         echo 'Error: "print_info" is missing parameter(s)!'
         exit 1
@@ -39,8 +53,23 @@ print_info ()
     fi
 }
 
+print_info_json ()
+{
+    if [ -z "$1" ] ; then
+        echo 'Error: "print_info" is missing parameter(s)!'
+        exit 1
+    fi
+    #                                               escape \ (\ -> \\)     escape " (" -> \")         newline -> \n 
+    echo "    \"$(slugify "$1")\": \"$(echo "$2" | sed "s/['\\]/\\\&/g" | sed "s/['\"]/\\\&/g" | awk '{printf "%s\\n", $0}')\","
+}
+
 print_footer ()
 {
+    if [ ! -z "$JSON_OUTPUT" ] ; then
+        echo "  },"
+        return
+    fi
+
     printf "%0.s-" $(seq 1 $HORIZONTAL_LINE_WIDTH)
     printf "\n"
 }
@@ -253,6 +282,11 @@ check_root_user
 distro_detect
 devicetree_detect
 bootloader_detect
+if [ ! -z "$JSON_OUTPUT" ] ; then
+    echo "{"
+fi
+
+
 
 if [ $# -ne 0 ]; then
 
@@ -302,3 +336,7 @@ else
     software_summary
     hardware_info
 fi
+if [ ! -z "$JSON_OUTPUT" ] ; then
+    echo "}"
+fi
+
