@@ -21,3 +21,5 @@ Usage: ./tdx-info [OPTION]
 
 For older versions of BSP or TorizonCore (versions 5 and older), run the following command to print the information:
 wget https://raw.githubusercontent.com/toradex/tdx-info/master/tdx-info --output-document=tdx-info && sudo sh ./tdx-info
+
+If the `JSON_OUTPUT` environment variable is set, the script will output in JSON format.
