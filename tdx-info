@@ -24,7 +24,7 @@ print_header ()
         if [ -n "$INSIDE_OBJECT" ] ; then
             printf ",\n"
         fi
-        echo "  \"$(slugify $1)\": {"
+        echo "  \"$(slugify "$1")\": {"
         INSIDE_OBJECT=1
         return
     fi
@@ -68,8 +68,8 @@ print_info_json ()
     fi
     INSIDE_OBJECT_2=1
 
-    #                                                escape \ (\ -> \\)     escape " (" -> \")         newline -> \n 
-    echo -n "    \"$(slugify "$1")\": \"$(echo "$2" | sed "s/['\\]/\\\&/g" | sed "s/['\"]/\\\&/g" | awk '{printf "%s\\n", $0}')\""
+    #                                                          \ -> \\)              " -> \"               newline -> \n
+    echo -n "    \"$(slugify "$1")\": \"$(echo -n "$2" | sed "s/['\\]/\\\&/g" | sed "s/['\"]/\\\&/g" | sed ':a;N;$!ba;s/\n/\\n/g')\""
 }
 
 print_footer ()
