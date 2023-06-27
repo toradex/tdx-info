@@ -350,6 +350,5 @@ else
     hardware_info
 fi
 if [ ! -z "$JSON_OUTPUT" ] ; then
-    echo "}"
+    printf "\n}\n"
 fi
-
