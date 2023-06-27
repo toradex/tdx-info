@@ -21,7 +21,11 @@ print_header ()
         exit 1
     fi
     if [ ! -z "$JSON_OUTPUT" ] ; then
+        if [ -n "$INSIDE_OBJECT" ] ; then
+            printf ",\n"
+        fi
         echo "  \"$(slugify $1)\": {"
+        INSIDE_OBJECT=1
         return
     fi
     if [ -n "$1" ]; then
@@ -59,14 +63,20 @@ print_info_json ()
         echo 'Error: "print_info" is missing parameter(s)!'
         exit 1
     fi
-    #                                               escape \ (\ -> \\)     escape " (" -> \")         newline -> \n 
-    echo "    \"$(slugify "$1")\": \"$(echo "$2" | sed "s/['\\]/\\\&/g" | sed "s/['\"]/\\\&/g" | awk '{printf "%s\\n", $0}')\","
+    if [ -n "$INSIDE_OBJECT_2" ] ; then
+        printf ",\n"
+    fi
+    INSIDE_OBJECT_2=1
+
+    #                                                escape \ (\ -> \\)     escape " (" -> \")         newline -> \n 
+    echo -n "    \"$(slugify "$1")\": \"$(echo "$2" | sed "s/['\\]/\\\&/g" | sed "s/['\"]/\\\&/g" | awk '{printf "%s\\n", $0}')\""
 }
 
 print_footer ()
 {
     if [ ! -z "$JSON_OUTPUT" ] ; then
-        echo "  },"
+        printf "  }"
+        unset INSIDE_OBJECT_2
         return
     fi
 
