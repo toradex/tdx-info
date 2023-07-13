@@ -111,10 +111,23 @@ software_summary ()
 
 hardware_info ()
 {
-    hw_model=$(tr -d '\0' 2> /dev/null </proc/device-tree/model)
-    serial=$(tr -d '\0' 2> /dev/null </proc/device-tree/serial-number)
-    som_pid4=$(tr -d '\0' 2> /dev/null </proc/device-tree/toradex,product-id)
-    som_pid8=$(tr -d '\0' 2> /dev/null </proc/device-tree/toradex,board-rev)
+    if [ "$USE_DEVICETREE" ]; then
+        hw_model=$(tr -d '\0' 2> /dev/null </proc/device-tree/model)
+        serial=$(tr -d '\0' 2> /dev/null </proc/device-tree/serial-number)
+        som_pid4=$(tr -d '\0' 2> /dev/null </proc/device-tree/toradex,product-id)
+        som_pid8=$(tr -d '\0' 2> /dev/null </proc/device-tree/toradex,board-rev)
+    else
+        # so, possible we can get the data from bios
+        _product_name=$(cat /sys/devices/virtual/dmi/id/board_name)
+        _product_vendor=$(cat /sys/devices/virtual/dmi/id/board_vendor)
+        _product_version=$(cat /sys/devices/virtual/dmi/id/board_version)
+
+        hw_model="$_product_vendor $_product_name $_product_version"
+        serial=$(cat /sys/devices/virtual/dmi/id/board_serial)
+        som_pid4=""
+        som_pid8=""
+    fi
+
     processor=$(uname -m)
 
     print_header "Hardware info"
