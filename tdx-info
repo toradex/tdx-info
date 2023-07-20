@@ -9,21 +9,39 @@ TABULATION_WIDTH=25
 
 #### Functions ####
 
+slugify ()
+{
+    echo "$1" | sed -r s/[^a-zA-Z0-9]+/-/g | sed -r s/^-+\|-+$//g | tr A-Z a-z
+}
+
 print_header ()
 {
+    if [ -z "$1" ] ; then
+        echo 'Error: "print_info" is missing parameter(s)!'
+        exit 1
+    fi
+    if [ ! -z "$JSON_OUTPUT" ] ; then
+        if [ -n "$INSIDE_OBJECT" ] ; then
+            printf ",\n"
+        fi
+        echo "  \"$(slugify "$1")\": {"
+        INSIDE_OBJECT=1
+        return
+    fi
     if [ -n "$1" ]; then
         echo ""
         echo "$1"
         printf "%0.s-" $(seq 1 $HORIZONTAL_LINE_WIDTH)
         printf "\n"
-    else
-        echo 'Error: "print_header" called without a parameter!'
-        exit 1
     fi
 }
 
 print_info ()
 {
+    if [ ! -z "$JSON_OUTPUT" ] ; then
+        print_info_json "$1" "$2"
+        return
+    fi
     if [ -z "$1" ] ; then
         echo 'Error: "print_info" is missing parameter(s)!'
         exit 1
@@ -39,8 +57,29 @@ print_info ()
     fi
 }
 
+print_info_json ()
+{
+    if [ -z "$1" ] ; then
+        echo 'Error: "print_info" is missing parameter(s)!'
+        exit 1
+    fi
+    if [ -n "$INSIDE_OBJECT_2" ] ; then
+        printf ",\n"
+    fi
+    INSIDE_OBJECT_2=1
+
+    #                                                          \ -> \\)              " -> \"               newline -> \n
+    echo -n "    \"$(slugify "$1")\": \"$(echo -n "$2" | sed "s/['\\]/\\\&/g" | sed "s/['\"]/\\\&/g" | sed ':a;N;$!ba;s/\n/\\n/g')\""
+}
+
 print_footer ()
 {
+    if [ ! -z "$JSON_OUTPUT" ] ; then
+        printf "  }"
+        unset INSIDE_OBJECT_2
+        return
+    fi
+
     printf "%0.s-" $(seq 1 $HORIZONTAL_LINE_WIDTH)
     printf "\n"
 }
@@ -52,6 +91,7 @@ software_summary ()
     if [ -f /etc/os-release ]; then
         distro_name=$(grep ^NAME /etc/os-release)
         distro_version=$(grep VERSION_ID /etc/os-release)
+        distro_variant=$(grep VARIANT /etc/os-release)
     else
         distro_name=$(cat /etc/issue)
         distro_version=""
@@ -64,16 +104,30 @@ software_summary ()
     print_info "Kernel command line" "$kernel_cmdline"
     print_info "Distro name" "$distro_name"
     print_info "Distro version" "$distro_version"
+    print_info "Distro variant" "$distro_variant"
     print_info "Hostname" "$hostname"
     print_footer
 }
 
 hardware_info ()
 {
-    hw_model=$(tr -d '\0' 2> /dev/null </proc/device-tree/model)
-    serial=$(tr -d '\0' 2> /dev/null </proc/device-tree/serial-number)
-    som_pid4=$(tr -d '\0' 2> /dev/null </proc/device-tree/toradex,product-id)
-    som_pid8=$(tr -d '\0' 2> /dev/null </proc/device-tree/toradex,board-rev)
+    if [ "$USE_DEVICETREE" ]; then
+        hw_model=$(tr -d '\0' 2> /dev/null </proc/device-tree/model)
+        serial=$(tr -d '\0' 2> /dev/null </proc/device-tree/serial-number)
+        som_pid4=$(tr -d '\0' 2> /dev/null </proc/device-tree/toradex,product-id)
+        som_pid8=$(tr -d '\0' 2> /dev/null </proc/device-tree/toradex,board-rev)
+    else
+        # so, possible we can get the data from bios
+        _product_name=$(cat /sys/devices/virtual/dmi/id/board_name)
+        _product_vendor=$(cat /sys/devices/virtual/dmi/id/board_vendor)
+        _product_version=$(cat /sys/devices/virtual/dmi/id/board_version)
+
+        hw_model="$_product_vendor $_product_name $_product_version"
+        serial=$(cat /sys/devices/virtual/dmi/id/board_serial)
+        som_pid4=""
+        som_pid8=""
+    fi
+
     processor=$(uname -m)
 
     print_header "Hardware info"
@@ -210,7 +264,8 @@ devicetree_detect ()
     # GRUB seem to have some sort of support for device tree
     if  find /boot/ -name "*dtb" 2> /dev/null | grep -q . || \
         find /var/rootdirs/mnt/boot/ -name "*dtb" 2> /dev/null | grep -q . || \
-        find /dev/ -iname "*ubi*" 2> /dev/null | grep -q .; then
+        find /dev/ -iname "*ubi*" 2> /dev/null | grep -q . || \
+        find /proc/device-tree/ -name "model" 2> /dev/null | grep -q .; then
         export USE_DEVICETREE=1
     else
         export USE_DEVICETREE=""
@@ -253,6 +308,11 @@ check_root_user
 distro_detect
 devicetree_detect
 bootloader_detect
+if [ ! -z "$JSON_OUTPUT" ] ; then
+    echo "{"
+fi
+
+
 
 if [ $# -ne 0 ]; then
 
@@ -301,4 +361,7 @@ if [ $# -ne 0 ]; then
 else
     software_summary
     hardware_info
+fi
+if [ ! -z "$JSON_OUTPUT" ] ; then
+    printf "\n}\n"
 fi
