@@ -118,11 +118,11 @@ hardware_info ()
         som_pid8=$(tr -d '\0' 2> /dev/null </proc/device-tree/toradex,board-rev)
     elif [ -n "$WSL_DISTRO_NAME" ]; then
         # WSL and possible all the Windows apps output in UTF-16
-        _wslOutput=$(wsl.exe --version | iconv -f UTF16)
+        _wslOutput=$(wsl.exe --version | iconv -f UTF16 -t UTF8 | tr -d '\r')
         readarray -t lines <<< "$_wslOutput"
 
-        hw_model="WSL :: ${lines[0]}"
-        serial="Windows :: ${lines[6]}"
+        hw_model=$(echo "WSL :: ${lines[0]}")
+        serial=$(echo "Windows :: ${lines[6]}")
         som_pid4=""
         som_pid8=""
     else
