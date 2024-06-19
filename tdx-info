@@ -72,6 +72,16 @@ print_info_json ()
     echo -n "    \"$(slugify "$1")\": \"$(echo -n "$2" | sed "s/['\\]/\\\&/g" | sed "s/['\"]/\\\&/g" | sed ':a;N;$!ba;s/\n/\\n/g')\""
 }
 
+print_info_json_raw ()
+{
+    if [ -z "$1" ] ; then
+        echo 'Error: "print_info" is missing parameter(s)!'
+        exit 1
+    fi
+    echo ","
+    echo "$2"
+}
+
 print_footer ()
 {
     if [ ! -z "$JSON_OUTPUT" ] ; then
@@ -135,6 +145,11 @@ hardware_info ()
     print_info "Toradex version" "$som_pid4 $som_pid8"
     print_info "Serial number" "$serial"
     print_info "Processor arch" "$processor"
+    if [ ! -z "$JSON_OUTPUT" ] ; then
+        print_info_json_raw "Available block devices" "$(lsblk -J | tail -n +2 | head -n -1)"
+    else
+        print_info "Available block devices" "$(lsblk -r)"
+    fi
     print_footer
 }
 
